@@ -9,30 +9,96 @@
 	
 #include "http.h"
 
-const char* USER_AGENT = "SimpTube DS v";
+#ifndef VERSION
+    #define VERSION "[v undef]"
+#endif
+
+const char* USER_AGENT = "SimpTube DS v" VERSION;
+int retries = 0;
+bool cdInited = false;
 
 int main(void) {
-	consoleDemoInit();  //setup the sub screen for printing
 
-	iprintf("\n\n\tSimple Wifi Connection Demo\n\n");
-	iprintf("Connecting via WFC data ...\n");
+    while (true) {
 
-	if(!Wifi_InitDefault(WFC_CONNECT)) {
-		iprintf("Failed to connect!");
-	} else {
-		iprintf("Connected\n\n");
+        if (!cdInited) {
+            consoleDemoInit();  //setup the sub screen for printing
+            cdInited = true;
+        }
 
-        struct hostent* fulptubeHost = gethostbyname("zulc22.com");
-		getHttp(fulptubeHost, "/");
+        iprintf("\n\nTry#%i\n", ++retries);
+
+        iprintf("Init\n");
+        if (!Wifi_CheckInit()) Wifi_InitDefault(true);
+
+        int chinit=0;
+        while (!chinit) {
+            chinit=Wifi_CheckInit();
+            iprintf("%i\r",chinit);
+        }
+
+        iprintf("\n");
+        Wifi_AutoConnect();
+
+        int assocStatus;
+        bool connected=false;
+        while (true) { // not an infinite loop -- while ("trying to connect")
+            assocStatus = Wifi_AssocStatus();
+            switch (assocStatus) {
+                case ASSOCSTATUS_SEARCHING:
+                    iprintf("Searching for hotspot...       \r");
+                    break;
+                case ASSOCSTATUS_AUTHENTICATING:
+                    iprintf("Authenticating...              \r");
+                    break;
+                case ASSOCSTATUS_ASSOCIATING:
+                    iprintf("Associating...                 \r");
+                    break;
+                case ASSOCSTATUS_ACQUIRINGDHCP:
+                    iprintf("Obtaining IP address...        \r");
+                    break;
+                case ASSOCSTATUS_ASSOCIATED:
+                    iprintf("Connected!                     \r");
+                    connected=true;
+                    break;
+                case ASSOCSTATUS_CANNOTCONNECT:
+                    iprintf("Could not connect...           \r");
+                    break;
+                case ASSOCSTATUS_DISCONNECTED:
+                    iprintf("... not trying to connect ...  \r");
+                    break;
+            }
+            if (assocStatus == ASSOCSTATUS_ASSOCIATED ||
+                assocStatus == ASSOCSTATUS_CANNOTCONNECT) {
+                    // These conditions mean we're "done" trying to connect and we can continue
+                    break;
+            }
+        }
+        iprintf("\n");
+
+        if (!connected) {
+            iprintf("Failed to connect. Retry\n");
+            Wifi_DisableWifi();
+        } else break;
     }
-	
-	while(1) {
-		swiWaitForVBlank();
-        int keys = keysDown();
-        if(keys & KEY_START) break;
-	}
+
+    iprintf("Connected\n\n");
+
+    struct hostent* mahHost = gethostbyname("zulc22.com");
+    getHttp(mahHost, "/");
+    
+    timeout(480);
 
 	return 0;
+}
+
+void timeout(int frames) {
+    iprintf("\n");
+    for (int f=frames; f>=0; f--) {
+        swiWaitForVBlank();
+        iprintf("Timeout %i \r", f);
+    }
+    iprintf("\n");
 }
 
 void sendstr(int socket, char* data) {

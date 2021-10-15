@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "dswifi7.h": "c",
+        "socket.h": "c"
+    }
+}

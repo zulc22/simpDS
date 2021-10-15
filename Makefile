@@ -31,9 +31,13 @@ INCLUDES	:=	include
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
+REV := $(shell git rev-parse --short HEAD)$(shell git diff-index --quiet HEAD -- || echo -n +)
+$(info rev='$(REV)')
+
 CFLAGS	:=	-g -Wall -O2\
  		-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 		-ffast-math \
+		-DVERSION=\"$(REV)\" \
 		$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM9
