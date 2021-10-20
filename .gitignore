@@ -5,3 +5,5 @@ build/**
 *.map
 *.elf
 *.nds
+data/*.bin
+.vscode/*.log

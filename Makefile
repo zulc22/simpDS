@@ -6,10 +6,22 @@ ifeq ($(strip $(DEVKITARM)),)
 $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
 endif
 
+REV := $(shell git rev-parse --short HEAD)$(shell git diff-index --quiet HEAD -- || echo -n +)
+
 GAME_TITLE 		:=	SimpTube DS
-GAME_SUBTITLE1 	:=	☺
+GAME_SUBTITLE1 	:=	v$(REV)
 GAME_SUBTITLE2 	:=	zulc22 2021
 GAME_ICON 		:=	$(PWD)/icon.bmp
+
+# define bindo
+# 	bin2s -a 4 -H $2.h $1 | $(AS) -o $2.o
+# endef
+
+$(PWD)/data/%.bin: $(PWD)/images/%.png
+	$(PWD)/tools/png2ds.py $< $@
+
+IMGFILES := $(patsubst $(PWD)/images/%.png,$(PWD)/data/%.bin,$(wildcard $(PWD)/images/*.png))
+IMGFILES := $(IMGFILES) $(addsuffix .o,$(IMGFILES))
 
 include $(DEVKITARM)/ds_rules
 
@@ -30,9 +42,6 @@ INCLUDES	:=	include
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
-
-REV := $(shell git rev-parse --short HEAD)$(shell git diff-index --quiet HEAD -- || echo -n +)
-$(info rev='$(REV)')
 
 CFLAGS	:=	-g -Wall -O2\
  		-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
@@ -101,7 +110,7 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
  
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
  
-.PHONY: $(BUILD) clean
+.PHONY: $(BUILD) clean andrun
  
 #---------------------------------------------------------------------------------
 $(BUILD):
@@ -113,6 +122,11 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds
 
+# fake targets
+andrun: $(OUTPUT).nds
+	make
+	start $<
+
 #---------------------------------------------------------------------------------
 else
  
@@ -120,7 +134,7 @@ else
 # main targets
 #---------------------------------------------------------------------------------
 $(OUTPUT).nds	: 	$(OUTPUT).elf
-$(OUTPUT).elf	:	$(OFILES)
+$(OUTPUT).elf	:	$(OFILES) $(IMGFILES)
  
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
@@ -129,7 +143,7 @@ $(OUTPUT).elf	:	$(OFILES)
 	$(bin2o)
  
 -include $(DEPSDIR)/*.d
- 
+
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------

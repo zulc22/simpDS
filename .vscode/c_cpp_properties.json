@@ -3,7 +3,8 @@
         {
             "name": "DevKitPro",
             "includePath": [
-                "C:\\devkitPro\\libnds\\include"
+                "C:\\devkitPro\\libnds\\include",
+                "${workspaceFolder}/build"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:\\devkitPro\\devkitARM\\bin\\arm-none-eabi-gcc.exe",
