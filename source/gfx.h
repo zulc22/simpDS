@@ -4,6 +4,4 @@
 #include <nds/system.h>
 #include <nds/arm9/console.h>
 
-#include "logoscreen_bin.h"
-
 void initGfx();

@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "dswifi7.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "gfx.h": "c",
+        "glob.h": "c"
     }
 }

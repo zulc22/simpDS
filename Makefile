@@ -17,11 +17,10 @@ GAME_ICON 		:=	$(PWD)/icon.bmp
 # 	bin2s -a 4 -H $2.h $1 | $(AS) -o $2.o
 # endef
 
-$(PWD)/data/%.bin: $(PWD)/images/%.png
-	$(PWD)/tools/png2ds.py $< $@
-
-IMGFILES := $(patsubst $(PWD)/images/%.png,$(PWD)/data/%.bin,$(wildcard $(PWD)/images/*.png))
-IMGFILES := $(IMGFILES) $(addsuffix .o,$(IMGFILES))
+%_bm.png.o: %_bm.png
+# $(PWD)/tools/png2ds.py $< $@
+	grit $< -gu16 -gb -fh -gT!
+	$(AS) $(basename $(notdir $<)).s -o $(basename $(notdir $<)).png.o
 
 include $(DEVKITARM)/ds_rules
 
@@ -60,13 +59,12 @@ LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 #---------------------------------------------------------------------------------
 LIBS	:= 	-ldswifi9 -lnds9
  
- 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:=	$(LIBNDS)
- 
+
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
 # rules for different file extensions
@@ -134,8 +132,8 @@ else
 # main targets
 #---------------------------------------------------------------------------------
 $(OUTPUT).nds	: 	$(OUTPUT).elf
-$(OUTPUT).elf	:	$(OFILES) $(IMGFILES)
- 
+$(OUTPUT).elf	:	$(OFILES)
+
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
 #---------------------------------------------------------------------------------
